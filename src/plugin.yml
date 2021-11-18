@@ -1,0 +1,12 @@
+name: Artefact
+prefix: Af
+version: 0.1
+description: Grab the artefact!
+author: sooslick
+main: ru.sooslick.artefact.ArtefactPlugin
+api-version: 1.17
+commands:
+  artefact:
+    description: some artefact commands
+    aliases: af
+    usage: /artefact <command>

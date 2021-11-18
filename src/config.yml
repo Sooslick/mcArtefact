@@ -1,0 +1,9 @@
+debugMode: false
+maxPlayers: 8
+minVotesToStart: 2
+prestartTimer: 30
+spawnDistance: 180
+artefactLocation: 0, 0
+artefactSpawnRadius: 5
+goalScore: 3
+spawnProtection: true
