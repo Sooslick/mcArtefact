@@ -1,18 +1,22 @@
 package ru.sooslick.artefact;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Color;
+import org.bukkit.FireworkEffect;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Firework;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Shulker;
 import org.bukkit.event.HandlerList;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
@@ -41,6 +45,7 @@ public class ArtefactPlugin extends JavaPlugin {
     private Player carry;
     private LivingEntity placeholder;
     private ScoreboardHolder scoreboardHolder;
+    private Player lastCarry;
 
     public static ArtefactPlugin getInstance() {
         return instance;
@@ -72,6 +77,14 @@ public class ArtefactPlugin extends JavaPlugin {
         LoggerUtil.info(PLUGIN_INIT_SUCCESS);
     }
 
+    @Override
+    public void onDisable() {
+        if (artefactBlock != null)
+            artefactBlock.setType(Material.AIR);
+        if (placeholder != null && placeholder.isValid())
+            placeholder.remove();
+    }
+
     public void votestart(Player p) {
         if (gameRunning) {
             p.sendMessage(Messages.GAME_IS_RUNNING);
@@ -85,7 +98,8 @@ public class ArtefactPlugin extends JavaPlugin {
                 Bukkit.getScheduler().scheduleSyncDelayedTask(this, this::countdownImpl, 20);
                 Bukkit.broadcastMessage(String.format(Messages.START_COUNTDOWN, countdown));
             }
-        }
+        } else
+            p.sendMessage(Messages.START_VOTE_TWICE);
     }
 
     public void unvote(Player p) {
@@ -109,6 +123,10 @@ public class ArtefactPlugin extends JavaPlugin {
     public void join(Player p) {
         if (activePlayers.contains(p.getName())) {
             p.sendMessage(Messages.ALREADY_PLAYING);
+            return;
+        }
+        if (activePlayers.size() >= Cfg.maxPlayers) {
+            p.sendMessage(Messages.MAX_PLAYERS);
             return;
         }
         activePlayers.add(p.getName());
@@ -141,6 +159,7 @@ public class ArtefactPlugin extends JavaPlugin {
     public void pickupArtefact(Player p) {
         PlayerInventory inv = p.getInventory();
         if (inv.firstEmpty() != -1) {
+            placeholder.getLocation().getChunk().removePluginChunkTicket(this);
             placeholder.remove();
             placeholder = null;
             carry = p;
@@ -154,11 +173,17 @@ public class ArtefactPlugin extends JavaPlugin {
             }
             inv.addItem(is);
             carry.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 200, 3));
-            Bukkit.broadcastMessage(String.format(Messages.ARTEFACT_PICKUP, p.getName()));
+            if (!carry.equals(lastCarry)) {
+                lastCarry = carry;
+                Bukkit.broadcastMessage(String.format(Messages.ARTEFACT_PICKUP, p.getName()));
+            }
+        } else {
+            p.sendMessage(Messages.INVENTORY_FULL);
         }
     }
 
     public void spawnDefaultArtefact() {
+        lastCarry = null;
         spawnArtefact(WorldUtil.getRandomLocation(Cfg.artefactLocation, Cfg.artefactSpawnRadius).getBlock());
     }
 
@@ -175,11 +200,15 @@ public class ArtefactPlugin extends JavaPlugin {
             e.setLootTable(null);
             e.setCustomName("Artefact");
             placeholder = e;
+            placeholder.getLocation().getChunk().addPluginChunkTicket(this);
             LoggerUtil.debug("Spawned special block at " + b.getLocation());
             scoreboardHolder.adjustArtefact(e);
         } else {
+            b.setType(Material.AIR);
             scoreboardHolder.goal(s);
-            spawnDefaultArtefact();
+            salut(b.getLocation());
+            if (gameRunning)
+                spawnDefaultArtefact();
         }
     }
 
@@ -206,6 +235,7 @@ public class ArtefactPlugin extends JavaPlugin {
         Cfg.readConfig(getConfig());
         votestarters = new LinkedHashSet<>();
         countdown = Cfg.prestartTimer;
+        Bukkit.getOnlinePlayers().forEach(p -> p.setGameMode(GameMode.SPECTATOR));
         SpawnFinder.launchJob();
         if (gameEvents != null)
             HandlerList.unregisterAll(gameEvents);
@@ -220,7 +250,8 @@ public class ArtefactPlugin extends JavaPlugin {
         HandlerList.unregisterAll(lobbyEvents);
         SpawnFinder.bindSpawns();
         carry = null;
-        scoreboardHolder = new ScoreboardHolder(Bukkit.getScoreboardManager());
+        lastCarry = null;
+        scoreboardHolder = new ScoreboardHolder();
         activePlayers = new LinkedHashSet<>();
         for (Player p : Bukkit.getOnlinePlayers()) {
             respawnPlayer(p);
@@ -281,4 +312,31 @@ public class ArtefactPlugin extends JavaPlugin {
         SpawnFinder.highlightSpawns();
         Bukkit.getScheduler().scheduleSyncDelayedTask(this, this::highlightImpl, 8);
     }
+
+    private void salut(Location where) {
+        if (where.getWorld() == null)
+            return;
+        where.add(2, 5, 2);
+        Firework fw = (Firework) where.getWorld().spawnEntity(where, EntityType.FIREWORK);
+        FireworkMeta fwm = fw.getFireworkMeta();
+        fwm.setPower(1);
+        fwm.addEffect(FireworkEffect.builder().withTrail().withFlicker().withColor(Color.ORANGE).with(FireworkEffect.Type.BURST).build());
+        fw.setFireworkMeta(fwm);
+        where.add(-4, 1, 0);
+        ((Firework) where.getWorld().spawnEntity(where, EntityType.FIREWORK)).setFireworkMeta(fwm);
+        where.add(0, 1, -4);
+        ((Firework) where.getWorld().spawnEntity(where, EntityType.FIREWORK)).setFireworkMeta(fwm);
+        where.add(4, 1, 0);
+        ((Firework) where.getWorld().spawnEntity(where, EntityType.FIREWORK)).setFireworkMeta(fwm);
+    }
+
+    // todo 0.2:
+    //  - artefact spawn method
+    //   > SURFACE
+    //   > CYLINDER
+    //   > CYLINDER_NORMALIZED
+    //   > FROM_LIST
+    //  - teams
+    //   > store colors
+    //  - artefact spawn cooldown
 }

@@ -88,9 +88,9 @@ public class GameEvents implements Listener {
     }
 
     private void holdTick() {
-        if (holdPlayer == null)
-            return;
         ArtefactPlugin af = ArtefactPlugin.getInstance();
+        if (holdPlayer == null || af.getCarry() != null)
+            return;
         Block actualTarget = holdPlayer.getTargetBlockExact(4, FluidCollisionMode.NEVER);
         if (actualTarget != null && actualTarget.equals(af.getArtefactBlock())) {
             holdTicks++;

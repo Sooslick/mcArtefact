@@ -37,7 +37,10 @@ public class SpawnFinder {
         step = Math.PI / Cfg.maxPlayers;
         randomHit = false;
         running = true;
-        Bukkit.getScheduler().scheduleSyncDelayedTask(ArtefactPlugin.getInstance(), SpawnFinder::findSpawnTick, 4);
+        if (Cfg.customPlayerSpawnsEnabled)
+            Cfg.customPlayerSpawns.forEach(l -> safeSpawns.put(l, 0D));
+        else
+            Bukkit.getScheduler().scheduleSyncDelayedTask(ArtefactPlugin.getInstance(), SpawnFinder::findSpawnTick, 4);
         LoggerUtil.debug("launchJob");
     }
 
@@ -45,7 +48,9 @@ public class SpawnFinder {
         LoggerUtil.debug("called bindSpawns");
         running = false;
         int pls = Bukkit.getOnlinePlayers().size();
-        if (safeSpawns.size() < pls) {
+        if (pls == 0)
+            return;
+        if (Cfg.customPlayerSpawnsEnabled || safeSpawns.size() < pls) {
             findSpawnsForce();
             return;
         }
@@ -53,7 +58,6 @@ public class SpawnFinder {
         LoggerUtil.debug("bindSpawns - sorting found spawns");
         List<Map.Entry<Location, Double>> sortedSpawns = new ArrayList<>(safeSpawns.entrySet());
         sortedSpawns.sort(Map.Entry.comparingByValue());
-        //System.out.println(sortedSpawns);
         // calc distances
         LoggerUtil.debug("bindSpawns - calc distances between existing spawns");
         LinkedHashMap<Location, Double> spawnDistances = new LinkedHashMap<>();
@@ -66,10 +70,9 @@ public class SpawnFinder {
         current += WorldUtil.distance2d(sortedSpawns.get(0).getKey(), sortedSpawns.get(sortedSpawns.size() - 1).getKey());
         spawnDistances.put(Cfg.artefactLocation, current);
         List<Map.Entry<Location, Double>> sortedDistances = new ArrayList<>(spawnDistances.entrySet());
-        //System.out.println(sortedDistances);
 
         // search best distance between player spawns
-        double targetDistance = current / pls;      //todo zero divide
+        double targetDistance = current / pls;
         boolean next = pls > 1;
         LoggerUtil.debug("bindSpawns - process distances, targetDistance = " + targetDistance);
         while (next) {
@@ -157,6 +160,15 @@ public class SpawnFinder {
 
     public static void allocateSpawn(Player p) {
         LoggerUtil.debug("called allocateSpawn");
+        if (safeSpawns.size() > 0) {
+            Location l = safeSpawns.entrySet().stream().findAny().map(Map.Entry::getKey).orElse(WorldUtil.getRandomDistanceLocation(Cfg.artefactLocation, Cfg.spawnDistance));
+            safeSpawns.remove(l);
+            if (!WorldUtil.isSafeLocation(l))
+                WorldUtil.safetizeLocation(l);
+            spawnBinds.put(p.getName(), l);
+            LoggerUtil.debug("allocated spawn from safeSpawns");
+            return;
+        }
         double startAngle = CommonUtil.RANDOM.nextDouble() * PI2;
         while (true) {
             Location test = WorldUtil.getDistanceLocation(Cfg.artefactLocation, Cfg.spawnDistance, startAngle);
@@ -167,7 +179,7 @@ public class SpawnFinder {
                 LoggerUtil.debug("allocated random spawn");
                 if (!WorldUtil.isSafeLocation(test))
                     WorldUtil.safetizeLocation(test);
-                break;
+                return;
             }
             startAngle += 0.05D;
         }
@@ -182,7 +194,21 @@ public class SpawnFinder {
         }
         World w = Bukkit.getWorlds().get(0);
         for (Location l : hls) {
-            w.spawnParticle(Particle.WAX_ON, l, 7, 2, 0.15, 2);
+            // vert
+            w.spawnParticle(Particle.WAX_ON, l.getX() - 2.5, l.getY(), l.getZ() - 2.5, 2, 0.1, 2.5, 0.1);
+            w.spawnParticle(Particle.WAX_ON, l.getX() + 2.5, l.getY(), l.getZ() - 2.5, 2, 0.1, 2.5, 0.1);
+            w.spawnParticle(Particle.WAX_ON, l.getX() - 2.5, l.getY(), l.getZ() + 2.5, 2, 0.1, 2.5, 0.1);
+            w.spawnParticle(Particle.WAX_ON, l.getX() + 2.5, l.getY(), l.getZ() + 2.5, 2, 0.1, 2.5, 0.1);
+            // top
+            w.spawnParticle(Particle.WAX_ON, l.getX() + 2.5, l.getY() + 2.5, l.getZ(), 2, 0.1, 0.1, 2.5);
+            w.spawnParticle(Particle.WAX_ON, l.getX() - 2.5, l.getY() + 2.5, l.getZ(), 2, 0.1, 0.1, 2.5);
+            w.spawnParticle(Particle.WAX_ON, l.getX(), l.getY() + 2.5, l.getZ() + 2.5, 2, 2.5, 0.1, 0.1);
+            w.spawnParticle(Particle.WAX_ON, l.getX(), l.getY() + 2.5, l.getZ() - 2.5, 2, 2.5, 0.1, 0.1);
+            // bottom
+            w.spawnParticle(Particle.WAX_ON, l.getX() + 2.5, l.getY() - 2.5, l.getZ(), 2, 0.1, 0.1, 2.5);
+            w.spawnParticle(Particle.WAX_ON, l.getX() - 2.5, l.getY() - 2.5, l.getZ(), 2, 0.1, 0.1, 2.5);
+            w.spawnParticle(Particle.WAX_ON, l.getX(), l.getY() - 2.5, l.getZ() + 2.5, 2, 2.5, 0.1, 0.1);
+            w.spawnParticle(Particle.WAX_ON, l.getX(), l.getY() - 2.5, l.getZ() - 2.5, 2, 2.5, 0.1, 0.1);
         }
     }
 
@@ -227,16 +253,7 @@ public class SpawnFinder {
 
     private static void findSpawnsForce() {
         LoggerUtil.debug("called findSpawnsForce");
-        for (Player p : Bukkit.getOnlinePlayers()) {
-            if (safeSpawns.size() > 0) {
-                Location l = safeSpawns.entrySet().stream().findAny().map(Map.Entry::getKey).orElse(WorldUtil.getRandomDistanceLocation(Cfg.artefactLocation, Cfg.spawnDistance));
-                spawnBinds.put(p.getName(), l);
-                safeSpawns.remove(l);
-                LoggerUtil.debug("findSpawnsForce - selected spawn from safeSpawns");
-            } else {
-                allocateSpawn(p);
-            }
-        }
+        Bukkit.getOnlinePlayers().forEach(SpawnFinder::allocateSpawn);
     }
 
     private SpawnFinder() {

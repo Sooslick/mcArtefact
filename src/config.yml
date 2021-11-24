@@ -2,8 +2,13 @@ debugMode: false
 maxPlayers: 8
 minVotesToStart: 2
 prestartTimer: 30
+customPlayerSpawnsEnabled: false
 spawnDistance: 180
 artefactLocation: 0, 0
 artefactSpawnRadius: 5
 goalScore: 3
 spawnProtection: true
+
+customPlayerSpawns:
+  - 100, 64, 0
+  - -100, 64, -1
