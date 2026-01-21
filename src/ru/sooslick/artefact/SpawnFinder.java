@@ -123,18 +123,18 @@ public class SpawnFinder {
 
     public static boolean isProtected(Block b) {
         return spawnBinds.values().stream()
-                .anyMatch(l -> (Math.abs(b.getX() - l.getBlockX()) <= 2 &&
-                        Math.abs(b.getY() - l.getBlockY()) <= 2 &&
-                        Math.abs(b.getZ() - l.getBlockZ()) <= 2));
+                .anyMatch(l -> (Math.abs(b.getX() - l.getBlockX()) <= Cfg.spawnAreaRadius &&
+                        Math.abs(b.getY() - l.getBlockY()) <= Cfg.spawnAreaRadius &&
+                        Math.abs(b.getZ() - l.getBlockZ()) <= Cfg.spawnAreaRadius));
     }
 
     public static boolean isProtected(Block b, Player p) {
         for (Map.Entry<String, Location> e : spawnBinds.entrySet()) {
             Location l = e.getValue();
             if (!p.getName().equals(e.getKey()) &&
-                    Math.abs(b.getX() - l.getBlockX()) <= 2 &&
-                    Math.abs(b.getY() - l.getBlockY()) <= 2 &&
-                    Math.abs(b.getZ() - l.getBlockZ()) <= 2)
+                    Math.abs(b.getX() - l.getBlockX()) <= Cfg.spawnAreaRadius &&
+                    Math.abs(b.getY() - l.getBlockY()) <= Cfg.spawnAreaRadius &&
+                    Math.abs(b.getZ() - l.getBlockZ()) <= Cfg.spawnAreaRadius)
                 return true;
         }
         return false;
@@ -193,22 +193,25 @@ public class SpawnFinder {
                 hls.add(spawn);
         }
         World w = Bukkit.getWorlds().get(0);
+        double spawnRadius = Cfg.spawnAreaRadius + 0.5;
+        double spawnHeight = 4d;
+        double lineThickness = 0.1d;
         for (Location l : hls) {
             // vert
-            w.spawnParticle(Particle.WAX_ON, l.getX() - 2.5, l.getY(), l.getZ() - 2.5, 2, 0.1, 2.5, 0.1);
-            w.spawnParticle(Particle.WAX_ON, l.getX() + 2.5, l.getY(), l.getZ() - 2.5, 2, 0.1, 2.5, 0.1);
-            w.spawnParticle(Particle.WAX_ON, l.getX() - 2.5, l.getY(), l.getZ() + 2.5, 2, 0.1, 2.5, 0.1);
-            w.spawnParticle(Particle.WAX_ON, l.getX() + 2.5, l.getY(), l.getZ() + 2.5, 2, 0.1, 2.5, 0.1);
+            w.spawnParticle(Particle.WAX_ON, l.getX() - spawnRadius, l.getY(), l.getZ() - spawnRadius, 2, lineThickness, spawnHeight, lineThickness);
+            w.spawnParticle(Particle.WAX_ON, l.getX() + spawnRadius, l.getY(), l.getZ() - spawnRadius, 2, lineThickness, spawnHeight, lineThickness);
+            w.spawnParticle(Particle.WAX_ON, l.getX() - spawnRadius, l.getY(), l.getZ() + spawnRadius, 2, lineThickness, spawnHeight, lineThickness);
+            w.spawnParticle(Particle.WAX_ON, l.getX() + spawnRadius, l.getY(), l.getZ() + spawnRadius, 2, lineThickness, spawnHeight, lineThickness);
             // top
-            w.spawnParticle(Particle.WAX_ON, l.getX() + 2.5, l.getY() + 2.5, l.getZ(), 2, 0.1, 0.1, 2.5);
-            w.spawnParticle(Particle.WAX_ON, l.getX() - 2.5, l.getY() + 2.5, l.getZ(), 2, 0.1, 0.1, 2.5);
-            w.spawnParticle(Particle.WAX_ON, l.getX(), l.getY() + 2.5, l.getZ() + 2.5, 2, 2.5, 0.1, 0.1);
-            w.spawnParticle(Particle.WAX_ON, l.getX(), l.getY() + 2.5, l.getZ() - 2.5, 2, 2.5, 0.1, 0.1);
+            w.spawnParticle(Particle.WAX_ON, l.getX() + spawnRadius, l.getY() + spawnHeight, l.getZ(), 2, lineThickness, lineThickness, spawnRadius);
+            w.spawnParticle(Particle.WAX_ON, l.getX() - spawnRadius, l.getY() + spawnHeight, l.getZ(), 2, lineThickness, lineThickness, spawnRadius);
+            w.spawnParticle(Particle.WAX_ON, l.getX(), l.getY() + spawnHeight, l.getZ() + spawnRadius, 2, spawnRadius, lineThickness, lineThickness);
+            w.spawnParticle(Particle.WAX_ON, l.getX(), l.getY() + spawnHeight, l.getZ() - spawnRadius, 2, spawnRadius, lineThickness, lineThickness);
             // bottom
-            w.spawnParticle(Particle.WAX_ON, l.getX() + 2.5, l.getY() - 2.5, l.getZ(), 2, 0.1, 0.1, 2.5);
-            w.spawnParticle(Particle.WAX_ON, l.getX() - 2.5, l.getY() - 2.5, l.getZ(), 2, 0.1, 0.1, 2.5);
-            w.spawnParticle(Particle.WAX_ON, l.getX(), l.getY() - 2.5, l.getZ() + 2.5, 2, 2.5, 0.1, 0.1);
-            w.spawnParticle(Particle.WAX_ON, l.getX(), l.getY() - 2.5, l.getZ() - 2.5, 2, 2.5, 0.1, 0.1);
+            w.spawnParticle(Particle.WAX_ON, l.getX() + spawnRadius, l.getY(), l.getZ(), 2, lineThickness, lineThickness, spawnRadius);
+            w.spawnParticle(Particle.WAX_ON, l.getX() - spawnRadius, l.getY(), l.getZ(), 2, lineThickness, lineThickness, spawnRadius);
+            w.spawnParticle(Particle.WAX_ON, l.getX(), l.getY(), l.getZ() + spawnRadius, 2, spawnRadius, lineThickness, lineThickness);
+            w.spawnParticle(Particle.WAX_ON, l.getX(), l.getY(), l.getZ() - spawnRadius, 2, spawnRadius, lineThickness, lineThickness);
         }
     }
 

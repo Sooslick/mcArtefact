@@ -8,6 +8,7 @@ artefactLocation: 0, 0
 artefactSpawnRadius: 5
 goalScore: 3
 spawnProtection: true
+spawnAreaRadius: 2
 
 customPlayerSpawns:
   - 100, 64, 0

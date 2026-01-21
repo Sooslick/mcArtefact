@@ -25,6 +25,7 @@ public class Cfg {
     private static final String ARTEFACT_SPAWN_RADIUS = "artefactSpawnRadius";
     private static final String GOAL_SCORE = "goalScore";
     private static final String SPAWN_PROTECTION = "spawnProtection";
+    private static final String SPAWN_AREA_RADIUS = "spawnAreaRadius";
     private static final String CUSTOM_PLAYER_SPAWNS = "customPlayerSpawns";
 
     private static final Pattern XZ_REGEX = Pattern.compile("([-]?\\d+),[ ]?([-]?\\d+)");
@@ -41,6 +42,7 @@ public class Cfg {
     public static int artefactSpawnRadius = 5;
     public static int goalScore = 2;
     public static boolean spawnProtection = true;
+    public static int spawnAreaRadius = 2;
     public static List<Location> customPlayerSpawns = new LinkedList<>();
 
     public static void readConfig(FileConfiguration cfg) {
@@ -53,6 +55,7 @@ public class Cfg {
         artefactSpawnRadius = cfg.getInt(ARTEFACT_SPAWN_RADIUS, 5);
         goalScore = cfg.getInt(GOAL_SCORE, 2);
         spawnProtection = cfg.getBoolean(SPAWN_PROTECTION, true);
+        spawnAreaRadius = cfg.getInt(SPAWN_AREA_RADIUS, 2);
 
         String artLoc = cfg.getString(ARTEFACT_LOCATION, "0, 0");
         try {
@@ -94,6 +97,7 @@ public class Cfg {
         if (spawnDistance < maxPlayers) spawnDistance = maxPlayers;
         if (artefactSpawnRadius < 0) artefactSpawnRadius = 0;
         if (goalScore < 1) goalScore = 1;
+        if (spawnAreaRadius < 0) spawnAreaRadius = 0;
         if (customPlayerSpawnsEnabled && customPlayerSpawns.size() < maxPlayers)
             LoggerUtil.warn(WARN_SPAWNS);
     }
