@@ -22,68 +22,68 @@ public class SpawnProtectEvents implements Listener {
     @EventHandler(ignoreCancelled = true)
     public void onCreeper(EntityExplodeEvent e) {
         e.blockList().removeAll(e.blockList().stream()
-                .filter(SpawnFinder::isProtected)
+                .filter(SpawnManager::isProtected)
                 .collect(Collectors.toList()));
     }
 
     @EventHandler(ignoreCancelled = true)
     public void onTnt(BlockExplodeEvent e) {
         e.blockList().removeAll(e.blockList().stream()
-                .filter(SpawnFinder::isProtected)
+                .filter(SpawnManager::isProtected)
                 .collect(Collectors.toList()));
     }
 
     @EventHandler(ignoreCancelled = true)
     public void onPistonPush(BlockPistonExtendEvent e) {
         if (e.getBlocks().stream()
-                .anyMatch(SpawnFinder::isProtected))
+                .anyMatch(SpawnManager::isProtected))
             e.setCancelled(true);
     }
 
     @EventHandler(ignoreCancelled = true)
     public void onPistonPull(BlockPistonRetractEvent e) {
         if (e.getBlocks().stream()
-                .anyMatch(SpawnFinder::isProtected))
+                .anyMatch(SpawnManager::isProtected))
             e.setCancelled(true);
     }
 
     @EventHandler(ignoreCancelled = true)
     public void onInteract(PlayerInteractEvent e) {
         if (e.getClickedBlock() != null && e.getClickedBlock().getState() instanceof Container)
-            if (SpawnFinder.isProtected(e.getClickedBlock(), e.getPlayer()))
+            if (SpawnManager.isProtected(e.getClickedBlock(), e.getPlayer()))
                 e.setCancelled(true);
     }
 
     @EventHandler(ignoreCancelled = true)
     public void onDamage(EntityDamageEvent e) {
         if (e.getEntity() instanceof Player)
-            if (SpawnFinder.isProtected(e.getEntity().getLocation().getBlock(), (Player) e.getEntity()))
+            if (SpawnManager.isProtected(e.getEntity().getLocation().getBlock(), (Player) e.getEntity()))
                 e.setCancelled(true);
     }
 
     @EventHandler(ignoreCancelled = true)
     public void onBlockPlace(BlockPlaceEvent e) {
         if (e.getBlockPlaced().getType() != Material.BEDROCK) {
-            if (SpawnFinder.isProtected(e.getBlockPlaced(), e.getPlayer()))
+            if (SpawnManager.isProtected(e.getBlockPlaced(), e.getPlayer()))
                 e.setCancelled(true);
         }
     }
 
     @EventHandler(ignoreCancelled = true)
     public void onBurn(BlockBurnEvent e) {
-        if (SpawnFinder.isProtected(e.getBlock()))
+        if (SpawnManager.isProtected(e.getBlock()))
             e.setCancelled(true);
     }
 
     @EventHandler(ignoreCancelled = true)
     public void onBucket(PlayerBucketEmptyEvent e) {
-        if (SpawnFinder.isProtected(e.getBlock(), e.getPlayer()))
+        if (SpawnManager.isProtected(e.getBlock(), e.getPlayer()))
             e.setCancelled(true);
     }
 
     @EventHandler(ignoreCancelled = true)
     public void onFlow(BlockFromToEvent e) {
-        if (SpawnFinder.isProtected(e.getToBlock()) && !SpawnFinder.isProtected(e.getBlock()))
+        if (SpawnManager.isProtected(e.getToBlock()) && !SpawnManager.isProtected(e.getBlock()))
             e.setCancelled(true);
     }
 }

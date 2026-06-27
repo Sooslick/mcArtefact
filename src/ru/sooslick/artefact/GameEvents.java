@@ -82,7 +82,7 @@ public class GameEvents implements Listener {
         ArtefactPlugin af = ArtefactPlugin.getInstance();
         if (af.isPlaying(e.getPlayer())) {
             af.respawnPlayer(e.getPlayer());
-            e.setRespawnLocation(SpawnFinder.getSpawnLocation(e.getPlayer()));
+            e.setRespawnLocation(SpawnManager.getSpawnLocation(e.getPlayer()));
         } else
             e.getPlayer().setGameMode(GameMode.SPECTATOR);
     }

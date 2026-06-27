@@ -89,7 +89,7 @@ public class WorldUtil {
         return getDistanceLocation(src, dist, CommonUtil.RANDOM.nextDouble() * Math.PI * 2);
     }
 
-    public static Location getDistanceLocation(Location src, int dist, double angle) {
+    public static Location getDistanceLocation(Location src, double dist, double angle) {
         int x = (int) (src.getX() + (Math.cos(angle) * dist));
         int z = (int) (src.getZ() + (Math.sin(angle) * dist));
         return Bukkit.getWorlds().get(0).getHighestBlockAt(x, z).getLocation().add(0.5, 1, 0.5);

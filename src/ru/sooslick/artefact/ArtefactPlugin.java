@@ -29,7 +29,7 @@ import java.util.Set;
 
 public class ArtefactPlugin extends JavaPlugin {
     private static final String PLUGIN_CREATE_DATAFOLDER = "Created plugin data folder";
-    private static final String PLUGIN_CREATE_DATAFOLDER_FAILED = "§eCannot create plugin data folder. Default config will be loaded.\n Do you have sufficient rights?";
+    private static final String PLUGIN_CREATE_DATAFOLDER_FAILED = "§eCannot create plugin data folder. Default config will be loaded.\nDo you have sufficient rights?";
     private static final String PLUGIN_INIT_SUCCESS = "Init Artefact Plugin - success";
 
     private static ArtefactPlugin instance;
@@ -188,7 +188,7 @@ public class ArtefactPlugin extends JavaPlugin {
     }
 
     public void spawnArtefact(Block b) {
-        String s = SpawnFinder.getPlayerBySpawn(b);
+        String s = SpawnManager.getPlayerBySpawn(b);
         if (s == null) {
             b.setType(Material.BEDROCK);
             artefactBlock = b;
@@ -213,7 +213,7 @@ public class ArtefactPlugin extends JavaPlugin {
     }
 
     public void respawnPlayer(Player p) {
-        Location resp = SpawnFinder.getSpawnLocation(p);
+        Location resp = SpawnManager.getSpawnLocation(p);
         p.teleport(resp);
         p.setHealth(20);
         p.setFoodLevel(20);
@@ -236,7 +236,7 @@ public class ArtefactPlugin extends JavaPlugin {
         votestarters = new LinkedHashSet<>();
         countdown = Cfg.prestartTimer;
         Bukkit.getOnlinePlayers().forEach(p -> p.setGameMode(GameMode.SPECTATOR));
-        SpawnFinder.launchJob();
+        SpawnManager.prepareSpawns();
         if (gameEvents != null)
             HandlerList.unregisterAll(gameEvents);
         if (protectEvents != null)
@@ -248,7 +248,7 @@ public class ArtefactPlugin extends JavaPlugin {
     protected void triggerGame() {
         gameRunning = true;
         HandlerList.unregisterAll(lobbyEvents);
-        SpawnFinder.bindSpawns();
+        SpawnManager.bindSpawns();
         carry = null;
         lastCarry = null;
         scoreboardHolder = new ScoreboardHolder();
@@ -292,14 +292,14 @@ public class ArtefactPlugin extends JavaPlugin {
             compass = carry.getLocation();
             if (!carry.hasPotionEffect(PotionEffectType.SLOW))
                 carry.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 200, 3));
-            String pl = SpawnFinder.getPlayerBySpawn(carry.getLocation().getBlock());
+            String pl = SpawnManager.getPlayerBySpawn(carry.getLocation().getBlock());
             if (pl != null && pl.equals(carry.getName())) {
                 dropArtefact(carry.getLocation().getBlock());
             }
         }
         for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
             if (onlinePlayer.equals(carry))
-                onlinePlayer.setCompassTarget(SpawnFinder.getSpawnLocation(onlinePlayer));
+                onlinePlayer.setCompassTarget(SpawnManager.getSpawnLocation(onlinePlayer));
             else
                 onlinePlayer.setCompassTarget(compass);
         }
@@ -309,7 +309,7 @@ public class ArtefactPlugin extends JavaPlugin {
     private void highlightImpl() {
         if (!gameRunning)
             return;
-        SpawnFinder.highlightSpawns();
+        SpawnManager.highlightSpawns();
         Bukkit.getScheduler().scheduleSyncDelayedTask(this, this::highlightImpl, 8);
     }
 
